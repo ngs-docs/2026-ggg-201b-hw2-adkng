@@ -1,11 +1,15 @@
 rule all:
     input:
-        "SRR2584857_quast.4000000",
-        "SRR2584857_annot.4000000",
+        "SRR2584857_quast.3500000", # 3.5m lines
+        "SRR2584857_annot.3500000",
+        "SRR2584857_quast.2200000", # 2.2m lines
+        "SRR2584857_annot.2200000",
+        "SRR2584857_quast.3050000", # 3.05m lines
+        "SRR2584857_annot.3050000",
 
 rule subset_reads:
     input:
-        "{sample}.fastq.gz",
+        "{sample}.fastq.gz"
     output:
         "{sample}.{subset,\d+}.fastq.gz"
     shell: """
@@ -17,6 +21,7 @@ rule annotate:
         "SRR2584857-assembly.{subset}.fa"
     output:
         directory("SRR2584857_annot.{subset}")
+    conda: "prokka"
     shell: """
        prokka --prefix {output} {input}                                       
     """
@@ -28,6 +33,7 @@ rule assemble:
     output:
         dir = directory("SRR2584857_assembly.{subset}"),
         assembly = "SRR2584857-assembly.{subset}.fa"
+    conda: "megahit"
     shell: """
        megahit -1 {input.r1} -2 {input.r2} -f -m 5e9 -t 4 -o {output.dir}     
        cp {output.dir}/final.contigs.fa {output.assembly}                     
@@ -38,6 +44,7 @@ rule quast:
         "SRR2584857-assembly.{subset}.fa"
     output:
         directory("SRR2584857_quast.{subset}")
+    conda: "megahit"
     shell: """                                                                
        quast {input} -o {output}                                              
     """
